@@ -228,15 +228,34 @@ function __fish_helix_find_prev_cr -a mode count skip
 end
 
 function __fish_helix_goto_line_end
-    # check if we are on an empty line first
-    commandline | sed -n (commandline -L)'!b;/^$/q;q5' && return
+    # Get the current command line content and store it in a variable
+    set current_cmd (commandline)
+
+    # Use `string trim` to handle empty lines effectively
+    if test -z (string trim -- "$current_cmd")
+        return
+    end
+
+    # Move to the end of the line and then back by one character
     commandline -f end-of-line backward-char
 end
 
 function __fish_helix_goto_first_nonwhitespace
-    # check if we are on whitespace line first
-    commandline | sed -n (commandline -L)'!b;/^\\s*$/q;q5' && return
-    commandline -f beginning-of-line forward-bigword backward-bigword
+    # Store the current command line content in a variable
+    set current_cmd (commandline)
+
+    # Check if the trimmed command line is empty
+    if test -z (string trim -- "$current_cmd")
+        return
+    end
+
+    # Find the position of the first non-whitespace character
+    set -l first_nonws_pos (string match -rn '\S' -- "$current_cmd" | cut -d' ' -f1)
+
+    if test -n "$first_nonws_pos"
+        # Move cursor to that position (subtract 1 because commandline -C is 0-based)
+        commandline -C (math "$first_nonws_pos" - 1)
+    end
 end
 
 function __fish_helix_goto_line -a number
