@@ -1,5 +1,5 @@
 function fish_bind_count
-    argparse 'h/help' 'z/zero' 'r/read' -- $argv
+    argparse h/help z/zero r/read -- $argv
     or return 1
     if test -n "$_flag_help"
         echo "Helper function to track count modifier with modal key bindings"
@@ -12,7 +12,7 @@ function fish_bind_count
     # Iterate over given digits
     for arg in $argv
         for digit in (string split '' "$arg")
-            set -g fish_bind_count $(math "$fish_bind_count" \* 10 \+ "$digit")
+            set -g fish_bind_count (math "$fish_bind_count" \* 10 \+ "$digit")
         end
     end
     if test -n "$_flag_read"
