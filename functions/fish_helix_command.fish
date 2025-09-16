@@ -422,8 +422,10 @@ function __fish_helix_replace_selection -a replacement cmd_paste
     set cursor (commandline -C)
     set start (commandline -B)
     set end (commandline -E)
-    commandline |
-        sed -zE 's/^(.{'$start'})(.{0,'(math $end - $start)'})(.*)\\n$/\\1'"$(string escape --style=regex "$replacement")"'\\3/' |
+    set length (math $end - $start)
+    set escaped_replacement (string escape --style=regex "$replacement")
+
+    string replace --all --regex '^(.{'$start'})(.{0,'$length'})(.*)\\n$' '\\1'"$escaped_replacement"'\\3' |
         read -l result
 
     commandline "$result"
