@@ -159,6 +159,9 @@ function fish_helix_command
             case select_all
                 commandline -f beginning-of-buffer begin-selection end-of-buffer end-of-line backward-char
 
+            case extend_line_below
+                __fish_helix_extend_line_below
+
             case '*'
                 echo "[fish-helix]" Unknown command $command >&2
         end
@@ -448,5 +451,44 @@ function __fish_helix_replace_selection -a replacement cmd_paste
         if test $cursor = $start
             commandline -f swap-selection-start-stop
         end
+    end
+end
+
+function __fish_helix_extend_line_below
+    set -l sel_start (commandline -B)
+    set -l sel_end (commandline -E)
+    set -l cursor (commandline -C)
+
+    set -l is_line_selection 0
+    if test $sel_start -ge 0
+        set -l c (commandline -C)
+        commandline -C $sel_start
+        set -l start_pos (commandline -C)
+        commandline -f beginning-of-line
+        if test "$start_pos" = (commandline -C)
+            commandline -C $sel_end
+            set -l end_pos (commandline -C)
+            commandline -f end-of-line
+            if test "$end_pos" = (commandline -C)
+                set is_line_selection 1
+            end
+        end
+        commandline -C $c
+    end
+
+    if test $is_line_selection = 1
+        commandline -C $sel_end
+        commandline -f down-line
+        commandline -f end-of-line
+    else
+        if test $sel_start -lt 0
+            set sel_start $cursor
+            set sel_end $cursor
+        end
+        commandline -C $sel_start
+        commandline -f beginning-of-line
+        commandline -f begin-selection
+        commandline -C $sel_end
+        commandline -f end-of-line
     end
 end
