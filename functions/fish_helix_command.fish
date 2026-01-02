@@ -162,6 +162,9 @@ function fish_helix_command
             case extend_line_below
                 __fish_helix_extend_line_below
 
+            case trim_selections
+                __fish_helix_trim_selections
+
             case '*'
                 echo "[fish-helix]" Unknown command $command >&2
         end
@@ -490,5 +493,64 @@ function __fish_helix_extend_line_below
         commandline -f begin-selection
         commandline -C $sel_end
         commandline -f end-of-line
+    end
+end
+
+function __fish_helix_trim_selections
+    set -l sel_start (commandline -B)
+    set -l sel_end (commandline -E)
+    set -l cursor (commandline -C)
+
+    # If no selection, nothing to trim
+    if test $sel_start -lt 0
+        return
+    end
+
+    # Get the full text and extract selection
+    set -l text (commandline)
+    set -l length (math $sel_end - $sel_start)
+
+    # Extract selected text (string sub uses 1-based indexing)
+    set -l selected (string sub -s (math $sel_start + 1) -l $length -- "$text")
+
+    # If selection is empty, nothing to do
+    if test -z "$selected"
+        return
+    end
+
+    # Find leading whitespace count
+    set -l leading_match (string match -r '^\s+' -- "$selected")
+    set -l leading_ws (string length -- "$leading_match")
+
+    # Find trailing whitespace count
+    set -l trailing_match (string match -r '\s+$' -- "$selected")
+    set -l trailing_ws (string length -- "$trailing_match")
+
+    # If nothing to trim, return
+    if test $leading_ws -eq 0 -a $trailing_ws -eq 0
+        return
+    end
+
+    # Check if entire selection is whitespace (leading + trailing overlap)
+    if test (math $leading_ws + $trailing_ws) -ge $length
+        return
+    end
+
+    # Calculate new selection length
+    set -l new_length (math $length - $leading_ws - $trailing_ws)
+    set -l new_start (math $sel_start + $leading_ws)
+
+    # Set the new selection using count-based loop
+    commandline -C $new_start
+    commandline -f begin-selection
+    if test $new_length -gt 1
+        for i in (seq 1 (math $new_length - 1))
+            commandline -f forward-char
+        end
+    end
+
+    # Preserve cursor direction (if cursor was at start, swap)
+    if test $cursor -eq $sel_start
+        commandline -f swap-selection-start-stop
     end
 end
