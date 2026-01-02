@@ -143,17 +143,9 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
         bind -s --preset -M $mode T "fish_helix_command till_prev_char"
         bind -s --preset -M $mode F "fish_helix_command find_prev_char"
 
-        bind -s --preset -M $mode t\e ""
-        bind -s --preset -M $mode f\e ""
-        bind -s --preset -M $mode T\e ""
-        bind -s --preset -M $mode F\e ""
-
-        for enter in \r \n
-            bind -s --preset -M $mode t$enter "fish_helix_command till_next_cr"
-            bind -s --preset -M $mode f$enter "fish_helix_command find_next_cr"
-            bind -s --preset -M $mode T$enter "fish_helix_command till_prev_cr"
-            bind -s --preset -M $mode F$enter "fish_helix_command find_prev_cr"
-        end
+        # NOTE: Multi-key sequences with regular letter prefixes (like F\e, F\r, etc.)
+        # are not supported by fish's bind system in fish 4.3.0+
+        # These bindings have been removed to prevent parse errors
 
         for key in gh \e\[H \eOH home
             bind -s --preset -M $mode $key "fish_helix_command goto_line_start"
@@ -197,7 +189,7 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
         bind -s --preset -M $mode " R" "fish_helix_command replace_selection_clip"
 
         # FIXME keep selection
-        bind -s --preset -M $mode ~ togglecase-selection
+        bind -s --preset -M $mode '~' togglecase-selection
         # FIXME ` and \e`
 
         # FIXME .
