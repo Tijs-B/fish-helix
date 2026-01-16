@@ -223,8 +223,10 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
 
         ## FIXME minor modes: g, m, space
 
-        # Match mode: surround
+        # Match mode: surround, inner, around
         bind -s --preset -M $mode -m match_surround ms repaint-mode
+        bind -s --preset -M $mode -m match_inner mi repaint-mode
+        bind -s --preset -M $mode -m match_around ma repaint-mode
 
         ## FIXME [ and ] motions
     end
@@ -251,6 +253,40 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
     bind -s --preset -M match_surround -m default '`' "__fish_helix_surround_selection '\`' '\`'; commandline -f repaint-mode"
     # Cancel
     bind -s --preset -M match_surround -m default \e cancel repaint-mode
+
+    # Match inner mode: select inside pair
+    # Paired characters
+    bind -s --preset -M match_inner -m default '(' "__fish_helix_select_pair '(' ')' inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default ')' "__fish_helix_select_pair '(' ')' inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default '[' "__fish_helix_select_pair '[' ']' inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default ']' "__fish_helix_select_pair '[' ']' inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default '{' "__fish_helix_select_pair '{' '}' inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default '}' "__fish_helix_select_pair '{' '}' inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default '<' "__fish_helix_select_pair '<' '>' inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default '>' "__fish_helix_select_pair '<' '>' inner; commandline -f repaint-mode"
+    # Symmetric characters
+    bind -s --preset -M match_inner -m default "'" "__fish_helix_select_pair \"'\" \"'\" inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default '"' "__fish_helix_select_pair '\"' '\"' inner; commandline -f repaint-mode"
+    bind -s --preset -M match_inner -m default '`' "__fish_helix_select_pair '\`' '\`' inner; commandline -f repaint-mode"
+    # Cancel
+    bind -s --preset -M match_inner -m default \e cancel repaint-mode
+
+    # Match around mode: select around pair (including delimiters)
+    # Paired characters
+    bind -s --preset -M match_around -m default '(' "__fish_helix_select_pair '(' ')' around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default ')' "__fish_helix_select_pair '(' ')' around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default '[' "__fish_helix_select_pair '[' ']' around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default ']' "__fish_helix_select_pair '[' ']' around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default '{' "__fish_helix_select_pair '{' '}' around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default '}' "__fish_helix_select_pair '{' '}' around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default '<' "__fish_helix_select_pair '<' '>' around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default '>' "__fish_helix_select_pair '<' '>' around; commandline -f repaint-mode"
+    # Symmetric characters
+    bind -s --preset -M match_around -m default "'" "__fish_helix_select_pair \"'\" \"'\" around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default '"' "__fish_helix_select_pair '\"' '\"' around; commandline -f repaint-mode"
+    bind -s --preset -M match_around -m default '`' "__fish_helix_select_pair '\`' '\`' around; commandline -f repaint-mode"
+    # Cancel
+    bind -s --preset -M match_around -m default \e cancel repaint-mode
 
     ## FIXME Insert mode keys
 

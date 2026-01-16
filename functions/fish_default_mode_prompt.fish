@@ -21,7 +21,13 @@ function fish_default_mode_prompt --description "Display vi/helix prompt mode"
                 echo '[V]'
             case match_surround
                 set_color --bold yellow
-                echo '[S]'
+                echo '[ms]'
+            case match_inner
+                set_color --bold yellow
+                echo '[mi]'
+            case match_around
+                set_color --bold yellow
+                echo '[ma]'
         end
         set_color normal
         echo -n ' '

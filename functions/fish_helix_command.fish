@@ -496,6 +496,140 @@ function __fish_helix_extend_line_below
     end
 end
 
+function __fish_helix_select_pair -a open_char close_char select_mode
+    set -l cursor (commandline -C)
+    set -l text (commandline)
+    set -l text_len (string length -- "$text")
+
+    # If text is empty, nothing to do
+    if test $text_len -eq 0
+        return
+    end
+
+    set -l open_pos -1
+    set -l close_pos -1
+
+    if test "$open_char" = "$close_char"
+        # Symmetric character (quotes, backticks)
+        # Find nearest open before or at cursor, and close after cursor
+        # Use perl for reliable string handling
+        set -l positions (echo -n "$text" | perl -e '
+            use open qw(:std :utf8);
+            my $char = $ARGV[0];
+            my $cursor = $ARGV[1];
+            local $/;
+            my $text = <STDIN>;
+            my @positions;
+            my $pos = 0;
+            while (($pos = index($text, $char, $pos)) != -1) {
+                push @positions, $pos;
+                $pos++;
+            }
+            # Find pair that encloses cursor
+            for (my $i = 0; $i < $#positions; $i += 2) {
+                my $open = $positions[$i];
+                my $close = $positions[$i + 1];
+                if (defined $close && $open <= $cursor && $cursor <= $close) {
+                    print "$open $close\n";
+                    exit;
+                }
+            }
+            # Try odd pairing if even failed
+            for (my $i = 1; $i < $#positions; $i += 2) {
+                my $open = $positions[$i];
+                my $close = $positions[$i + 1];
+                if (defined $close && $open <= $cursor && $cursor <= $close) {
+                    print "$open $close\n";
+                    exit;
+                }
+            }
+            print "-1 -1\n";
+        ' "$open_char" "$cursor")
+        echo $positions | read open_pos close_pos
+    else
+        # Paired characters - handle nesting
+        set -l positions (echo -n "$text" | perl -e '
+            use open qw(:std :utf8);
+            my $open_char = $ARGV[0];
+            my $close_char = $ARGV[1];
+            my $cursor = $ARGV[2];
+            local $/;
+            my $text = <STDIN>;
+            my $len = length($text);
+
+            # Search backwards from cursor for unmatched open
+            my $depth = 0;
+            my $open_pos = -1;
+            for (my $i = $cursor; $i >= 0; $i--) {
+                my $c = substr($text, $i, 1);
+                if ($c eq $close_char) {
+                    $depth++;
+                } elsif ($c eq $open_char) {
+                    if ($depth == 0) {
+                        $open_pos = $i;
+                        last;
+                    }
+                    $depth--;
+                }
+            }
+
+            if ($open_pos == -1) {
+                print "-1 -1\n";
+                exit;
+            }
+
+            # Search forwards from open_pos for matching close
+            $depth = 0;
+            my $close_pos = -1;
+            for (my $i = $open_pos; $i < $len; $i++) {
+                my $c = substr($text, $i, 1);
+                if ($c eq $open_char) {
+                    $depth++;
+                } elsif ($c eq $close_char) {
+                    $depth--;
+                    if ($depth == 0) {
+                        $close_pos = $i;
+                        last;
+                    }
+                }
+            }
+
+            print "$open_pos $close_pos\n";
+        ' "$open_char" "$close_char" "$cursor")
+        echo $positions | read open_pos close_pos
+    end
+
+    # Check if we found a valid pair
+    if test "$open_pos" = "-1" -o "$close_pos" = "-1"
+        return
+    end
+
+    # Set selection based on mode
+    if test "$select_mode" = inner
+        # Select inside the pair (excluding delimiters)
+        set -l start (math $open_pos + 1)
+        set -l end $close_pos
+        # If inner is empty, still position cursor there
+        if test $start -ge $end
+            commandline -C $start
+            commandline -f begin-selection
+            return
+        end
+        commandline -C $start
+        commandline -f begin-selection
+        for i in (seq $start (math $end - 2))
+            commandline -f forward-char
+        end
+    else
+        # Select around the pair (including delimiters)
+        commandline -C $open_pos
+        commandline -f begin-selection
+        for i in (seq $open_pos (math $close_pos - 1))
+            commandline -f forward-char
+        end
+    end
+end
+
 function __fish_helix_surround_selection -a open_char close_char
     set -l sel_start (commandline -B)
     set -l sel_end (commandline -E)
