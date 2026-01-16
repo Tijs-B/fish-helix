@@ -19,6 +19,9 @@ function fish_default_mode_prompt --description "Display vi/helix prompt mode"
             case visual
                 set_color --bold magenta
                 echo '[V]'
+            case match_surround
+                set_color --bold yellow
+                echo '[S]'
         end
         set_color normal
         echo -n ' '

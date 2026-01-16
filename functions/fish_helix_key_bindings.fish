@@ -223,6 +223,9 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
 
         ## FIXME minor modes: g, m, space
 
+        # Match mode: surround
+        bind -s --preset -M $mode -m match_surround ms repaint-mode
+
         ## FIXME [ and ] motions
     end
 
@@ -231,6 +234,23 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
     bind -s --preset -M replace_one -m default '' delete-char self-insert backward-char repaint-mode
     bind -s --preset -M replace_one -m default \r 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
     bind -s --preset -M replace_one -m default \e cancel repaint-mode
+
+    # Match surround mode: surround selection with typed character
+    # Paired characters
+    bind -s --preset -M match_surround -m default '(' "__fish_helix_surround_selection '(' ')'; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default ')' "__fish_helix_surround_selection '(' ')'; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default '[' "__fish_helix_surround_selection '[' ']'; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default ']' "__fish_helix_surround_selection '[' ']'; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default '{' "__fish_helix_surround_selection '{' '}'; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default '}' "__fish_helix_surround_selection '{' '}'; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default '<' "__fish_helix_surround_selection '<' '>'; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default '>' "__fish_helix_surround_selection '<' '>'; commandline -f repaint-mode"
+    # Symmetric characters
+    bind -s --preset -M match_surround -m default "'" "__fish_helix_surround_selection \"'\" \"'\"; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default '"' "__fish_helix_surround_selection '\"' '\"'; commandline -f repaint-mode"
+    bind -s --preset -M match_surround -m default '`' "__fish_helix_surround_selection '\`' '\`'; commandline -f repaint-mode"
+    # Cancel
+    bind -s --preset -M match_surround -m default \e cancel repaint-mode
 
     ## FIXME Insert mode keys
 

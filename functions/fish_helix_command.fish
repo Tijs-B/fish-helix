@@ -496,6 +496,47 @@ function __fish_helix_extend_line_below
     end
 end
 
+function __fish_helix_surround_selection -a open_char close_char
+    set -l sel_start (commandline -B)
+    set -l sel_end (commandline -E)
+    set -l cursor (commandline -C)
+
+    # If no selection, nothing to surround
+    if test $sel_start -lt 0
+        return
+    end
+
+    # Get the full text
+    set -l text (commandline)
+
+    # Extract the parts: before selection, selection, after selection
+    # string sub uses 1-based indexing
+    set -l before (string sub -l $sel_start -- "$text")
+    set -l selected (string sub -s (math $sel_start + 1) -l (math $sel_end - $sel_start) -- "$text")
+    set -l after (string sub -s (math $sel_end + 1) -- "$text")
+
+    # Build new text with surround characters
+    commandline "$before$open_char$selected$close_char$after"
+
+    # Set new selection to include the surround characters
+    # New selection: from sel_start to sel_end + 2 (for the two added chars)
+    # Selection starts at the opening char
+    commandline -C $sel_start
+    commandline -f begin-selection
+
+    # Move forward to include: open_char + selected + close_char
+    # That's (sel_end - sel_start) + 2 - 1 = sel_end - sel_start + 1 forward moves
+    set -l new_length (math $sel_end - $sel_start + 1)
+    for i in (seq 1 $new_length)
+        commandline -f forward-char
+    end
+
+    # Preserve cursor direction (if cursor was at start, swap)
+    if test $cursor -eq $sel_start
+        commandline -f swap-selection-start-stop
+    end
+end
+
 function __fish_helix_trim_selections
     set -l sel_start (commandline -B)
     set -l sel_end (commandline -E)
