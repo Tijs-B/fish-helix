@@ -31,6 +31,12 @@ function fish_default_mode_prompt --description "Display vi/helix prompt mode"
             case match_delete
                 set_color --bold yellow
                 echo '[md]'
+            case match_replace
+                set_color --bold yellow
+                echo '[mr]'
+            case match_replace_with
+                set_color --bold yellow
+                echo '[mr→]'
         end
         set_color normal
         echo -n ' '
