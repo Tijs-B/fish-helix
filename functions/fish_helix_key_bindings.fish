@@ -215,7 +215,7 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
 
         bind -s --preset -M $mode x "fish_helix_command extend_line_below"
         # FIXME X \ex
-        # FIXME J
+        bind -s --preset -M $mode J "fish_helix_command join_lines"
         # FIXME \cc
 
         ## Search

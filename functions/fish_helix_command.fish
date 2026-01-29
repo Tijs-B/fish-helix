@@ -165,6 +165,9 @@ function fish_helix_command
             case trim_selections
                 __fish_helix_trim_selections
 
+            case join_lines
+                __fish_helix_join_lines $count
+
             case '*'
                 echo "[fish-helix]" Unknown command $command >&2
         end
@@ -494,6 +497,62 @@ function __fish_helix_extend_line_below
         commandline -C $sel_end
         commandline -f end-of-line
     end
+end
+
+function __fish_helix_join_lines -a count
+    set -l text (commandline)
+    set -l cursor (commandline -C)
+
+    # Find how many lines we have
+    set -l total_lines (echo -n "$text" | perl -e 'local $/; my $t = <STDIN>; print scalar(() = $t =~ /\n/g) + 1')
+
+    # Get current line number
+    set -l current_line (commandline -L)
+
+    # Can't join if we're on the last line
+    if test $current_line -ge $total_lines
+        return
+    end
+
+    # Limit count to available lines
+    set -l max_joins (math $total_lines - $current_line)
+    if test $count -gt $max_joins
+        set count $max_joins
+    end
+
+    # Perform the join(s) using perl
+    set -l result (echo -n "$text" | perl -e '
+        use open qw(:std :utf8);
+        my $current_line = $ARGV[0];
+        my $count = $ARGV[1];
+        local $/;
+        my $text = <STDIN>;
+        my @lines = split /\n/, $text, -1;
+
+        # Join count times starting from current line (1-indexed to 0-indexed)
+        my $idx = $current_line - 1;
+        for (my $i = 0; $i < $count && $idx < $#lines; $i++) {
+            # Remove trailing whitespace from current line
+            $lines[$idx] =~ s/\s*$//;
+            # Remove leading whitespace from next line
+            $lines[$idx + 1] =~ s/^\s*//;
+            # Join with space (unless next line is empty)
+            if (length($lines[$idx + 1]) > 0) {
+                $lines[$idx] .= " " . $lines[$idx + 1];
+            }
+            # Remove the joined line
+            splice(@lines, $idx + 1, 1);
+        }
+
+        print join("\n", @lines);
+    ' "$current_line" "$count")
+
+    commandline "$result"
+
+    # Position cursor at the join point (end of original line content)
+    # and set selection on the space
+    commandline -f end-of-line
+    commandline -f begin-selection
 end
 
 function __fish_helix_select_pair -a open_char close_char select_mode
