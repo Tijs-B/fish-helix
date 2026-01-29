@@ -329,8 +329,11 @@ function __fish_helix_next_word -a mode count regex
     if test $mode = default
         commandline -C (math $cursor + $left)
         commandline -f begin-selection
-        for i in (seq $left (math $right - 2))
-            commandline -f forward-char
+        set -l num_moves (math $right - $left - 1)
+        if test $num_moves -gt 0
+            for i in (seq 1 $num_moves)
+                commandline -f forward-char
+            end
         end
     else
         commandline -C (math $cursor + $right - 1)
@@ -356,8 +359,11 @@ function __fish_helix_prev_word -a mode count regex
     if test $mode = default
         commandline -C (math $right - 1)
         commandline -f begin-selection
-        for i in (seq $left (math $right - 2))
-            commandline -f backward-char
+        set -l num_moves (math $right - $left - 1)
+        if test $num_moves -gt 0
+            for i in (seq 1 $num_moves)
+                commandline -f backward-char
+            end
         end
     else
         commandline -C (math $left)
