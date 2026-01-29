@@ -31,51 +31,51 @@ function fish_helix_command
             case next_word_start
                 # https://regex101.com/r/KXrl1x/1
                 set -l regex (string join '' \
-            '(?:.?\\n+|' \
-            '[[:alnum:]_](?=[^[:alnum:]_\\s])|' \
-            '[^[:alnum:]_\\s](?=[[:alnum:]_])|' \
-            '[^\\S\\n](?=[\\S\\n])|)' \
-            '((?:[[:alnum:]_]+|[^[:alnum:]_\\s]+|)[^\\S\\n]*)' \
+            '(?:.?\n+|' \
+            '[[:alnum:]_](?=[^[:alnum:]_\s])|' \
+            '[^[:alnum:]_\s](?=[[:alnum:]_])|' \
+            '[^\S\n](?=[\S\n])|)' \
+            '((?:[[:alnum:]_]+|[^[:alnum:]_\s]+|)[^\S\n]*)' \
             )
                 __fish_helix_next_word $fish_bind_mode $count $regex
 
             case next_long_word_start
                 set -l regex (string join '' \
-            '(?:.?\\n+|' \
-            '[^\\S\\n](?=[\\S\\n])|)' \
-            '(\\S*[^\\S\\n]*)' \
+            '(?:.?\n+|' \
+            '[^\S\n](?=[\S\n])|)' \
+            '(\S*[^\S\n]*)' \
             )
                 __fish_helix_next_word $fish_bind_mode $count $regex
 
             case next_word_end
                 # https://regex101.com/r/Gl0KP2/1
                 set -l regex ' (?:
-                .?\\n+ |
+                .?\n+ |
                 [[:alnum:]_](?=[^[:alnum:]_]) |
-                [^[:alnum:]_\\s](?=[[:alnum:]_\\s]) | )
-            ( [^\\S\\n]*
-                (?: [[:alnum:]_]+ | [^[:alnum:]_\\s]+ | ) ) '
+                [^[:alnum:]_\s](?=[[:alnum:]_\s]) | )
+            ( [^\S\n]*
+                (?: [[:alnum:]_]+ | [^[:alnum:]_\s]+ | ) ) '
                 __fish_helix_next_word $fish_bind_mode $count $regex
 
             case next_long_word_end
-                set -l regex ' (?: .?\\n+ | \\S(?=\\s) | )
-            ( [^\\S\\n]* \\S* ) '
+                set -l regex ' (?: .?\n+ | \S(?=\s) | )
+            ( [^\S\n]* \S* ) '
                 __fish_helix_next_word $fish_bind_mode $count $regex
 
             case prev_word_start
                 set -l regex ' ( (?:
                 [[:alnum:]_]+ |
-                [^[:alnum:]_\\s]+ | )
-            [^\\S\\n]* )
-            (?: \\n+.? |
+                [^[:alnum:]_\s]+ | )
+            [^\S\n]* )
+            (?: \n+.? |
                 (?<=[^[:alnum:]_])[[:alnum:]_] |
-                (?<=[[:alnum:]_\\s])[^[:alnum:]_\\s] | ) '
+                (?<=[[:alnum:]_\s])[^[:alnum:]_\s] | ) '
                 __fish_helix_prev_word $fish_bind_mode $count $regex
 
             case prev_long_word_start
                 set -l regex '
-            ( \\S* [^\\S\\n]* )
-            (?: \\n+.? | (?<=\\s)\\S | ) '
+            ( \S* [^\S\n]* )
+            (?: \n+.? | (?<=\s)\S | ) '
                 __fish_helix_prev_word $fish_bind_mode $count $regex
 
             case till_next_char
