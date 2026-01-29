@@ -192,8 +192,10 @@ function __fish_helix_find_char -a mode count fish_cmdline till
         commandline -f begin-selection
     end
     commandline -f $till $fish_cmdline
-    for i in (seq 2 $count)
-        commandline -f $till repeat-jump
+    if test $count -gt 1
+        for i in (seq 2 $count)
+            commandline -f $till repeat-jump
+        end
     end
 end
 
@@ -209,8 +211,11 @@ function __fish_helix_find_next_cr -a mode count skip
     if test $mode = default -a -n "$chars"
         commandline -f begin-selection
     end
-    for i in (seq 1 (string length -- "$chars"))
-        commandline -f forward-char
+    set -l chars_len (string length -- "$chars")
+    if test $chars_len -gt 0
+        for i in (seq 1 $chars_len)
+            commandline -f forward-char
+        end
     end
 end
 
@@ -229,8 +234,10 @@ function __fish_helix_find_prev_cr -a mode count skip
     if test $mode = default -a $n_chars != 0
         commandline -f begin-selection
     end
-    for i in (seq 1 $n_chars)
-        commandline -f backward-char
+    if test $n_chars -gt 0
+        for i in (seq 1 $n_chars)
+            commandline -f backward-char
+        end
     end
 end
 
@@ -268,51 +275,67 @@ end
 function __fish_helix_goto_line -a number
     set -l lines (math min\($number, (commandline | wc -l)\))
     commandline -f beginning-of-buffer
-    for i in (seq 2 $lines)
-        commandline -f down-line
+    if test $lines -gt 1
+        for i in (seq 2 $lines)
+            commandline -f down-line
+        end
     end
     __fish_helix_extend_by_mode
 end
 
 function __fish_helix_char_up -a mode count
     if commandline --paging-mode && not commandline --search-mode
-        for i in (seq 1 $count)
-            commandline -f up-line
+        if test $count -gt 0
+            for i in (seq 1 $count)
+                commandline -f up-line
+            end
         end
         return
     end
     set -l line (commandline -L)
     if commandline --search-mode || test $line = 1
-        for i in (seq 1 (math min \($count, (count $history)\)))
-            commandline -f history-search-backward
+        set -l hist_count (math "min($count, "(count $history)")")
+        if test $hist_count -gt 0
+            for i in (seq 1 $hist_count)
+                commandline -f history-search-backward
+            end
         end
         return
     end
-    set -l count (math min\($count, $line-1\))
-    for i in (seq 1 $count)
-        commandline -f up-line
+    set -l count (math "min($count, $line-1)")
+    if test $count -gt 0
+        for i in (seq 1 $count)
+            commandline -f up-line
+        end
     end
     __fish_helix_extend_by_mode
 end
 
 function __fish_helix_char_down -a mode count
     if commandline --paging-mode && not commandline --search-mode
-        for i in (seq 1 $count)
-            commandline -f down-line
+        if test $count -gt 0
+            for i in (seq 1 $count)
+                commandline -f down-line
+            end
         end
         return
     end
     set -l line (commandline -L)
     set -l total (count (commandline))
     if commandline --search-mode || test $line = $total
-        for i in (seq 1 (math min \($count, (count $history)\)))
-            commandline -f history-search-forward
+        set -l hist_count (math "min($count, "(count $history)")")
+        if test $hist_count -gt 0
+            for i in (seq 1 $hist_count)
+                commandline -f history-search-forward
+            end
         end
         return
     end
-    set -l count (math min\($count, $total - $line\))
-    for i in (seq 1 $count)
-        commandline -f down-line
+    set -l count (math "min($count, $total - $line)")
+    if test $count -gt 0
+        for i in (seq 1 $count)
+            commandline -f down-line
+        end
     end
     __fish_helix_extend_by_mode
 end
@@ -387,8 +410,11 @@ function __fish_helix_yank
     set -l cursor (commandline -C)
     commandline -f kill-selection yank backward-char
 
-    for i in (seq $cursor (math $end - 2))
-        commandline -f backward-char
+    set -l num_moves (math $end - $cursor - 1)
+    if test $num_moves -gt 0
+        for i in (seq 1 $num_moves)
+            commandline -f backward-char
+        end
     end
 end
 
@@ -400,8 +426,11 @@ function __fish_helix_paste_before -a cmd_paste
     commandline -C $start
     $cmd_paste
     commandline -f begin-selection
-    for i in (seq $start (math $end - 2))
-        commandline -f forward-char
+    set -l num_moves (math $end - $start - 1)
+    if test $num_moves -gt 0
+        for i in (seq 1 $num_moves)
+            commandline -f forward-char
+        end
     end
     if test $cursor = $start
         commandline -f swap-selection-start-stop
@@ -419,13 +448,19 @@ function __fish_helix_paste_after -a cmd_paste
     if test "$argv[2]" = --clip
         commandline -C (math $end - 1)
     else
-        for i in (seq 0 (string length "$fish_killring[1]"))
-            commandline -f backward-char
+        set -l killring_len (string length "$fish_killring[1]")
+        if test $killring_len -ge 0
+            for i in (seq 0 $killring_len)
+                commandline -f backward-char
+            end
         end
     end
     commandline -f begin-selection
-    for i in (seq $start (math $end - 2))
-        commandline -f backward-char
+    set -l num_moves (math $end - $start - 1)
+    if test $num_moves -gt 0
+        for i in (seq 1 $num_moves)
+            commandline -f backward-char
+        end
     end
     if test $cursor != $start
         commandline -f swap-selection-start-stop
@@ -449,16 +484,23 @@ function __fish_helix_replace_selection -a replacement cmd_paste
 
     if test "$argv[3]" = --clip
         commandline -f backward-char begin-selection
-        for i in (seq (math $start + 2) (commandline -C))
-            commandline -f backward-char
+        set -l current_pos (commandline -C)
+        set -l num_moves (math $current_pos - $start - 2)
+        if test $num_moves -gt 0
+            for i in (seq 1 $num_moves)
+                commandline -f backward-char
+            end
         end
         if test $cursor != $start
             commandline -f swap-selection-start-stop
         end
     else
         commandline -f begin-selection
-        for i in (seq 2 (string length "$replacement"))
-            commandline -f forward-char
+        set -l replacement_len (string length "$replacement")
+        if test $replacement_len -gt 1
+            for i in (seq 2 $replacement_len)
+                commandline -f forward-char
+            end
         end
         if test $cursor = $start
             commandline -f swap-selection-start-stop
@@ -682,15 +724,21 @@ function __fish_helix_select_pair -a open_char close_char select_mode
         end
         commandline -C $start
         commandline -f begin-selection
-        for i in (seq $start (math $end - 2))
-            commandline -f forward-char
+        set -l num_moves (math $end - $start - 1)
+        if test $num_moves -gt 0
+            for i in (seq 1 $num_moves)
+                commandline -f forward-char
+            end
         end
     else
         # Select around the pair (including delimiters)
         commandline -C $open_pos
         commandline -f begin-selection
-        for i in (seq $open_pos (math $close_pos - 1))
-            commandline -f forward-char
+        set -l num_moves (math $close_pos - $open_pos)
+        if test $num_moves -gt 0
+            for i in (seq 1 $num_moves)
+                commandline -f forward-char
+            end
         end
     end
 end
@@ -818,8 +866,10 @@ function __fish_helix_delete_pair -a open_char close_char
     else
         commandline -C $open_pos
         commandline -f begin-selection
-        for i in (seq 1 (math $inner_len - 1))
-            commandline -f forward-char
+        if test $inner_len -gt 1
+            for i in (seq 1 (math $inner_len - 1))
+                commandline -f forward-char
+            end
         end
     end
 end
