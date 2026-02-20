@@ -512,6 +512,8 @@ function __fish_helix_extend_line_below
     set -l sel_start (commandline -B)
     set -l sel_end (commandline -E)
     set -l cursor (commandline -C)
+    test -z "$sel_start"; and set sel_start -1
+    test -z "$sel_end"; and set sel_end -1
 
     set -l is_line_selection 0
     if test $sel_start -ge 0
