@@ -85,6 +85,7 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
     bind -s --preset -M insert ")" self-insert expand-abbr
     # Ctrl-space inserts space without expanding abbrs
     bind -s --preset -M insert ctrl-space 'commandline -i " "'
+    bind -s --preset -M insert ctrl-r history-pager
 
     # Switching to insert mode
     for mode in default visual
@@ -107,6 +108,7 @@ function fish_helix_key_bindings --description 'helix-like key bindings for fish
 
     # Switching between normal and visual mode
     bind -s --preset -M default -m visual v repaint-mode
+    bind -s --preset -M default -m insert / history-pager repaint-mode
     for key in v \e
         bind -s --preset -M visual -m default $key repaint-mode
     end
